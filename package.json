@@ -1,0 +1,27 @@
+{
+  "name": "Maeil",
+  "version": "1.0.0",
+  "description": "tsAp",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "pm2": "pm2 start index.js --name hisoka -- --max-old-space-size=8192",
+    "restart:pm2": "pm2 restart hisoka",
+    "stop:pm2": "pm2 stop hisoka"
+  },
+  "keywords": [
+    "autoreadsw",
+    "baileys"
+  ],
+  "author": "Mawil",
+  "license": "MIT",
+  "dependencies": {
+    "baileys": "latest",
+    "dotenv": "latest",
+    "file-type": "latest",
+    "fluent-ffmpeg": "latest",
+    "node-webpmux": "latest",
+    "qrcode-terminal": "latest"
+  }
+}
