@@ -1,4 +1,4 @@
-import { delay, jidNormalizedUser } from 'baileys';
+import { delay, jidNormalizedUser } from '@whiskeysockets/baileys';
 import util from 'util';
 import { exec } from 'child_process';
 
@@ -8,9 +8,9 @@ import serialize, { getContentType } from './lib/serialize.js';
 
 /**
  * 
- * @param {import('baileys').WASocket} hisoka 
+ * @param {import('@whiskeysockets/baileys').WASocket} hisoka 
  * @param {any} store 
- * @param {import('baileys').WAMessage} m 
+ * @param {import('@whiskeysockets/baileys').WAMessage} m 
  */
 export default async function message(hisoka, store, m) {
 	try {
@@ -21,12 +21,7 @@ export default async function message(hisoka, store, m) {
 		// mengabaikan pesan dari bot
 		if (m.isBot) return;
 
-		// memunculkan ke log
-		if (m.message && !m.isBot) {
-			console.log(Color.cyan('Dari'), Color.cyan(hisoka.getName(m.from)), Color.blueBright(m.from));
-			console.log(Color.yellowBright('Chat'), Color.yellowBright(m.isGroup ? `Grup (${m.sender} : ${hisoka.getName(m.sender)})` : 'Pribadi'));
-			console.log(Color.greenBright('Pesan :'), Color.greenBright(m.body || m.type));
-		}
+		// Removed duplicate logs
 
 		// command
 		switch (isCommand ? m.command.toLowerCase() : false) {

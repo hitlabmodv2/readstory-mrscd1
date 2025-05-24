@@ -1,4 +1,3 @@
-process.on('uncaughtException', console.error)
 import path from 'path';
 import { spawn } from 'child_process';
 import { watchFile, unwatchFile } from 'fs';

@@ -1,15 +1,8 @@
 import 'dotenv/config';
+import Color from './lib/color.js';
 
-import makeWASocket, {
-	delay,
-	useMultiFileAuthState,
-	fetchLatestBaileysVersion,
-	makeInMemoryStore,
-	jidNormalizedUser,
-	DisconnectReason,
-	Browsers,
-	makeCacheableSignalKeyStore,
-} from 'baileys';
+import pkg from '@whiskeysockets/baileys';
+const { makeWASocket, delay, useMultiFileAuthState, fetchLatestBaileysVersion, jidNormalizedUser, DisconnectReason, Browsers, makeCacheableSignalKeyStore, makeInMemoryStore } = pkg;
 import pino from 'pino';
 import { Boom } from '@hapi/boom';
 import fs from 'fs';
@@ -24,13 +17,24 @@ const logger = pino({ timestamp: () => `,"time":"${new Date().toJSON()}"` }).chi
 logger.level = 'fatal';
 
 const usePairingCode = process.env.PAIRING_NUMBER;
-const store = makeInMemoryStore({ logger });
 
-if (process.env.WRITE_STORE === 'true') store.readFromFile(`./${process.env.SESSION_NAME}/store.json`);
+const pathContacts = './database/contacts.json';
+const pathMetadata = './database/groups.json';
 
-// check available file
-const pathContacts = `./${process.env.SESSION_NAME}/contacts.json`;
-const pathMetadata = `./${process.env.SESSION_NAME}/groupMetadata.json`;
+const store = {
+	contacts: {},
+	groupMetadata: {},
+	loadMessage: async () => '',
+	writeToFile: () => {}
+}
+
+// Load contacts and groups if exists
+if (fs.existsSync(pathContacts)) {
+	store.contacts = JSON.parse(fs.readFileSync(pathContacts, 'utf-8'));
+}
+if (fs.existsSync(pathMetadata)) {
+	store.groupMetadata = JSON.parse(fs.readFileSync(pathMetadata, 'utf-8')); 
+}
 
 const startSock = async () => {
 	const { state, saveCreds } = await useMultiFileAuthState(`./${process.env.SESSION_NAME}`);
@@ -39,12 +43,12 @@ const startSock = async () => {
 	console.log(`using WA v${version.join('.')}, isLatest: ${isLatest}`);
 
 	/**
-	 * @type {import('baileys').WASocket}
+	 * @type {import('@whiskeysockets/baileys').WASocket}
 	 */
-	const hisoka = makeWASocket.default({
+	const hisoka = makeWASocket({
 		version,
 		logger,
-		printQRInTerminal: !usePairingCode,
+		printQRInTerminal: false,
 		auth: {
 			creds: state.creds,
 			keys: makeCacheableSignalKeyStore(state.keys, logger),
@@ -73,7 +77,6 @@ const startSock = async () => {
 		},
 	});
 
-	store.bind(hisoka.ev);
 	await Client({ hisoka, store });
 
 	// login dengan pairing
@@ -92,7 +95,10 @@ const startSock = async () => {
 
 	// ngewei info, restart or close
 	hisoka.ev.on('connection.update', async update => {
-		const { lastDisconnect, connection } = update;
+		const { lastDisconnect, connection, qr } = update;
+		if (qr) {
+			console.info('QR Code: ', qr);
+		}
 		if (connection) {
 			console.info(`Connection Status : ${connection}`);
 		}
@@ -233,18 +239,24 @@ const startSock = async () => {
 		// status self apa publik
 		if (process.env.SELF === 'true' && !m.isOwner) return;
 
+		// memunculkan ke log
+		if (m.message && !m.isBot) {
+			// Notifikasi status terpisah
+			if (m.key && !m.key.fromMe && m.key.remoteJid === 'status@broadcast') {
+				console.log('\n╭━━━━『 Status Update 』━━━━╮');
+				console.log(`│ • Creator: ${Color.magenta(hisoka.getName(m.sender))}`);
+				console.log(`│ • Type: ${Color.blue(m.type)}`);
+				if (m.body) console.log(`│ • Caption: ${Color.green(m.body)}`);
+				console.log('╰━━━━━━━━━━━━━━━━━━━━━╯\n');
+				return;
+			}
+		}
+
 		// kanggo kes
 		await (await import(`./message.js?v=${Date.now()}`)).default(hisoka, store, m);
 	});
 
 	setInterval(async () => {
-		// write contacts and metadata
-		if (store.groupMetadata) fs.writeFileSync(pathMetadata, JSON.stringify(store.groupMetadata));
-		if (store.contacts) fs.writeFileSync(pathContacts, JSON.stringify(store.contacts));
-
-		// write store
-		if (process.env.WRITE_STORE === 'true') store.writeToFile(`./${process.env.SESSION_NAME}/store.json`);
-
 		// untuk auto restart ketika RAM sisa 300MB
 		const memoryUsage = os.totalmem() - os.freemem();
 

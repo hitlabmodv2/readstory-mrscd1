@@ -1,7 +1,7 @@
 {
-  "name": "Maeiil",
+  "name": "readsw",
   "version": "1.0.0",
-  "description": "tsAp",
+  "description": "Script untuk membuat auto read status WhatsApp make baileys",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -14,14 +14,17 @@
     "autoreadsw",
     "baileys"
   ],
-  "author": "Mawil",
+  "author": "Dika Ardnt.",
   "license": "MIT",
   "dependencies": {
-    "baileys": "latest",
-    "dotenv": "latest",
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.17",
+    "dotenv": "^16.3.1",
     "file-type": "latest",
-    "fluent-ffmpeg": "latest",
-    "node-webpmux": "latest",
-    "qrcode-terminal": "latest"
+    "fluent-ffmpeg": "^2.1.2",
+    "libphonenumber-js": "^1.12.8",
+    "node-webpmux": "^3.1.9",
+    "pino": "^9.7.0",
+    "qrcode-terminal": "^0.12.0"
   }
 }
